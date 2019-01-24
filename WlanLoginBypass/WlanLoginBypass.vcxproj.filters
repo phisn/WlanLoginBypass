@@ -6,31 +6,34 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Adapter.h">
+    <ClCompile Include="source\Adapter.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="MACAddress.h">
+    </ClCompile>
+    <ClCompile Include="source\Client.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="Client.h">
+    </ClCompile>
+    <ClCompile Include="source\ClientFinder.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="ClientFinder.h">
+    </ClCompile>
+    <ClCompile Include="source\winMain.cpp">
       <Filter>source</Filter>
-    </ClInclude>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Adapter.cpp">
+    <ClInclude Include="source\Adapter.h">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="winMain.cpp">
+    </ClInclude>
+    <ClInclude Include="source\Client.h">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="Client.cpp">
+    </ClInclude>
+    <ClInclude Include="source\ClientFinder.h">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="ClientFinder.cpp">
+    </ClInclude>
+    <ClInclude Include="source\MacAddress.h">
       <Filter>source</Filter>
-    </ClCompile>
+    </ClInclude>
+    <ClInclude Include="source\IpAddress.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
