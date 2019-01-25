@@ -75,7 +75,7 @@ int main()
 	ClientFinder clientFinder( adapter.toPcapDevice() );
 	std::thread th([&]() { clientFinder(); });
 
-	std::this_thread::sleep_for(std::chrono::seconds(10));
+	std::this_thread::sleep_for(std::chrono::seconds(100));
 
 	clientFinder.stop();
 	th.join();

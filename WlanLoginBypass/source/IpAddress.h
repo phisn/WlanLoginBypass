@@ -12,6 +12,7 @@
 class IpAddress
 {
 public:
+	IpAddress() = default;
 	IpAddress(const char* address)
 	{
 	}
@@ -45,5 +46,5 @@ public:
 	}
 
 private:
-	IPAddr address;
+	IPAddr address = NULL;
 };

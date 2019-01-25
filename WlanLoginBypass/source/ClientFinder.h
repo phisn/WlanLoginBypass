@@ -25,7 +25,7 @@
 #define DEF_MACTARGET_OFFSET 0
 #define DEF_MACSOURCE_OFFSET 6
 
-#define IP_IPSOURCE_OFFSET 26
+#define IP_IPSOURCE_OFFSET 26 // propably wrong
 #define IP_IPTARGET_OFFSET 30
 
 #define ARP_IPSOURCE_OFFSET 28
@@ -95,8 +95,9 @@ public:
 		for (const Client& client : clients)
 		{
 			std::cout << "MAC: '" << client.getMacAddress().toString() << "' IP: '" << client.getIpAddress().toString() << "'" << std::endl;
-			std::cout << "RAW: " << std::endl;
+			/*std::cout << "RAW: " << std::endl;
 		
+			
 			for (int i = 0; i < client.getSize(); ++i)
 			{
 				std::cout.width(3);
@@ -116,7 +117,7 @@ public:
 			}
 			std::cout << std::endl;
 			std::cout << std::endl;
-			std::cout << std::endl;
+			std::cout << std::endl;*/
 		}
 	}
 
@@ -133,25 +134,42 @@ private:
 		const pcap_pkthdr* packetHeader,
 		const u_char* packetData)
 	{
-		switch (CONVERT_PTR(short, packetData + DEF_PROTO_OFFSET))
+		short result = MAKEWORD(CONVERT_PTR(char, packetData + DEF_PROTO_OFFSET + 1), CONVERT_PTR(char, packetData + DEF_PROTO_OFFSET));
+		switch (result)
 		{
 		case PROTO_TYPE_IP:
-			
+			current->clients.emplace(
+				IpAddress(CONVERT_PTR(
+					IPAddr,
+					packetData + IP_IPSOURCE_OFFSET)),
+				MacAddress(
+					packetData + DEF_MACSOURCE_OFFSET)
+			);
 
 			break;
 		case PROTO_TYPE_ARP:
-
+			if (CONVERT_PTR(short, packetData + ARP_PROTO_OFFSET) == PROTO_TYPE_IP)
+			{
+				current->clients.emplace(
+					IpAddress(CONVERT_PTR(
+						IPAddr,
+						packetData + ARP_IPSOURCE_OFFSET)),
+					MacAddress(
+						packetData + DEF_MACSOURCE_OFFSET)
+				);
+			}
+			else
+			{
+				current->clients.emplace(
+					IpAddress(),
+					MacAddress(packetData + DEF_MACSOURCE_OFFSET)
+				);
+			}
 
 			break;
 		}
 
-		std::cout << "Size: " << packetHeader->len << " : " << packetHeader->caplen << std::endl;
-		current->clients.emplace(
-			IpAddress(CONVERT_PTR(IPAddr, packetData + ARP_IPSOURCE_OFFSET)),
-			MacAddress(packetData + DEF_MACSOURCE_OFFSET),
-			packetData,
-			packetHeader->len
-		);
+		std::cout << std::hex << "(0x0" << result << std::dec << ") Size: " << packetHeader->len << " : " << packetHeader->caplen << std::endl;
 	}
 
 	pcap_t* captureHandle;

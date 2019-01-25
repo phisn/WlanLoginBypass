@@ -20,15 +20,11 @@ class Client
 public:
 	Client(
 		const IpAddress ipAddress,
-		const MacAddress macAddress,
-		const BYTE* cap,
-		int len)
+		const MacAddress macAddress)
 		:
 		ipAddress(ipAddress),
-		macAddress(macAddress),
-		len(len)
+		macAddress(macAddress)
 	{
-		memcpy(this->cap, cap, len);
 	}
 
 	bool validateClient()
@@ -68,15 +64,9 @@ public:
 		return macAddress;
 	}
 
-	const int getSize() const { return len; }
-	const BYTE* getRaw() const { return cap; }
-
 private:
 	const IpAddress ipAddress;
 	const MacAddress macAddress;
-
-	BYTE cap[2048] = { };
-	const int len;
 };
 
 static bool operator<(const Client& client1, const Client& client2)
