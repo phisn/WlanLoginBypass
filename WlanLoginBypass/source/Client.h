@@ -27,33 +27,6 @@ public:
 	{
 	}
 
-	bool validateClient()
-	{
-		/*
-		IPAddr address;
-		InetPtonA(AF_INET, ipAddress.c_str(), &address);
-
-		if (int result = InetPtonA(
-				AF_INET, 
-				ipAddress.c_str(),
-				&address)
-			; result != 1)
-		{
-			if (result == 0)
-			{
-				std::cout << "Got invalid IPAddress" << std::endl;
-				return false;
-			}
-			else
-			{
-				std::cout << "Got error '" << WSAGetLastError() << "'" << std::endl;
-
-				return false;
-			}
-		}
-		*/
-	}
-
 	IpAddress getIpAddress() const
 	{
 		return ipAddress;

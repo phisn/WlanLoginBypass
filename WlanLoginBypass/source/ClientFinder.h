@@ -14,7 +14,11 @@
 #pragma comment(lib, "Packet.lib")
 #pragma comment(lib, "wpcap.lib")
 
-#define CONVERT_PTR(type, val) (*(type*)(val))
+#define CONVERT_TO_PTR(type, val) (*(type*)(val))
+
+#define REVERSE_TO_08_PTR(val) CONVERT_TO_PTR(char, val)
+#define REVERSE_TO_16_PTR(val) MAKEWORD(REVERSE_TO_08_PTR(val + 1), REVERSE_TO_08_PTR(val))
+#define REVERSE_TO_32_PTR(val) MAKELONG(REVERSE_TO_16_PTR(val + 2), REVERSE_TO_16_PTR(val))
 
 #define PROTO_TYPE_ARP	0x0806
 #define PROTO_TYPE_IP	0x0800
@@ -134,12 +138,13 @@ private:
 		const pcap_pkthdr* packetHeader,
 		const u_char* packetData)
 	{
-		short result = MAKEWORD(CONVERT_PTR(char, packetData + DEF_PROTO_OFFSET + 1), CONVERT_PTR(char, packetData + DEF_PROTO_OFFSET));
-		switch (result)
+		std::pair<decltype(current->clients)::iterator, bool> result = { };
+
+		switch (REVERSE_TO_16_PTR(packetData + DEF_PROTO_OFFSET))
 		{
 		case PROTO_TYPE_IP:
-			current->clients.emplace(
-				IpAddress(CONVERT_PTR(
+			result = current->clients.emplace(
+				IpAddress(CONVERT_TO_PTR(
 					IPAddr,
 					packetData + IP_IPSOURCE_OFFSET)),
 				MacAddress(
@@ -148,10 +153,10 @@ private:
 
 			break;
 		case PROTO_TYPE_ARP:
-			if (CONVERT_PTR(short, packetData + ARP_PROTO_OFFSET) == PROTO_TYPE_IP)
+			if (REVERSE_TO_16_PTR(packetData + ARP_PROTO_OFFSET) == PROTO_TYPE_IP)
 			{
-				current->clients.emplace(
-					IpAddress(CONVERT_PTR(
+				result = current->clients.emplace(
+					IpAddress(CONVERT_TO_PTR(
 						IPAddr,
 						packetData + ARP_IPSOURCE_OFFSET)),
 					MacAddress(
@@ -160,16 +165,23 @@ private:
 			}
 			else
 			{
-				current->clients.emplace(
+				result = current->clients.emplace(
 					IpAddress(),
 					MacAddress(packetData + DEF_MACSOURCE_OFFSET)
 				);
 			}
 
 			break;
+		default:
+			std::cout << "Invalid protocol" << std::endl;
+
+			return;
 		}
 
-		std::cout << std::hex << "(0x0" << result << std::dec << ") Size: " << packetHeader->len << " : " << packetHeader->caplen << std::endl;
+		if (result.second)
+		{
+			std::cout << "Found => IP: " << result.first->getIpAddress().toString() << "  MAC: " << result.first->getMacAddress().toString() << ";" << std::endl;
+		}
 	}
 
 	pcap_t* captureHandle;

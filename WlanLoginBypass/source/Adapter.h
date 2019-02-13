@@ -81,6 +81,11 @@ public:
 		return "\1Not Found";
 	}
 
+	void restart()
+	{
+
+	}
+
 	struct CMA_RESULT
 	{
 		enum

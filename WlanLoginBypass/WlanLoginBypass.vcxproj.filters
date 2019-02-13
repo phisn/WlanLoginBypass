@@ -15,7 +15,10 @@
     <ClCompile Include="source\ClientFinder.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\winMain.cpp">
+    <ClCompile Include="winMain.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ClientTester.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -33,6 +36,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="source\IpAddress.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ClientTester.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

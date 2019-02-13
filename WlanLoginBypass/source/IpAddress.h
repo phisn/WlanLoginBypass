@@ -33,7 +33,7 @@ public:
 	std::string toString()
 	{
 		// 3 x 255 (numbers) + 4 (dots) + 1 (zero)
-		std::string result(3 * 4 + 4 + 1, '\0');
+		std::string result(3 * 3 + 4 + 1, '\0');
 
 		InetNtopA(
 			AF_INET, 

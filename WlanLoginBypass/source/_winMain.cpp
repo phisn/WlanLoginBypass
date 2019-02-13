@@ -1,4 +1,5 @@
-#include <Windows.h>
+
+/*#include <Windows.h>
 
 #include "Adapter.h"
 #include "ClientFinder.h"
@@ -123,4 +124,4 @@ int main()
 
 		std::cout << "Internetconnection lost, retry" << std::endl;
 	}*/
-}
+//}
