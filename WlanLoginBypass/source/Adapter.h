@@ -52,7 +52,7 @@ public:
 		memcpy(&info, adapterInfo, sizeof(IP_ADAPTER_INFO));
 	}
 	
-	std::string toPcapDevice() const
+	std::pair<std::string, bool> toPcapDevice() const
 	{
 		char errorBuffer[PCAP_ERRBUF_SIZE] = "";
 
@@ -62,8 +62,7 @@ public:
 				errorBuffer)
 			== -1)
 		{
-			std::cout << errorBuffer << std::endl;
-			return "\1Failed";
+			return { errorBuffer, false };
 		}
 
 		do
@@ -73,12 +72,17 @@ public:
 				std::string result = networkDevice->name;
 				pcap_freealldevs(networkDevice);
 				
-				return result;
+				return { result, true };
 			}
 
 		} while (networkDevice = networkDevice->next);
 
-		return "\1Not Found";
+		return { "Not found as PCAP device", false };
+	}
+
+	void resetMacAddress()
+	{
+
 	}
 
 	void restart()
@@ -240,28 +244,9 @@ public:
 		return result;
 	}
 
-	void print()
+	const IP_ADAPTER_INFO* getAdapterInfo() const
 	{
-		std::cout << info.Description << std::endl;
-		std::cout << info.AdapterName << std::endl;
-		
-		int i = 0;
-		while (true)
-		{
-			std::cout.fill('0');
-			std::cout.width(2);
-
-			std::cout << std::hex << (int) info.Address[i];
-
-			if (++i >= info.AddressLength)
-			{
-				break;
-			}
-
-			std::cout << ":";
-		}
-
-		std::cout << std::endl;
+		return &info;
 	}
 
 private:

@@ -94,38 +94,7 @@ public:
 		pcap_breakloop(captureHandle);
 	}
 	
-	void print()
-	{
-		for (const Client& client : clients)
-		{
-			std::cout << "MAC: '" << client.getMacAddress().toString() << "' IP: '" << client.getIpAddress().toString() << "'" << std::endl;
-			/*std::cout << "RAW: " << std::endl;
-		
-			
-			for (int i = 0; i < client.getSize(); ++i)
-			{
-				std::cout.width(3);
-				std::cout.fill('0');
-				std::cout << (int) client.getRaw()[i] << " ";
-				
-				if ((i + 1) % 16 == 0)
-				{
-					std::cout << std::endl;
-					continue;
-				}
-
-				if ((i + 1) % 8 == 0)
-				{
-					std::cout << "  ";
-				}
-			}
-			std::cout << std::endl;
-			std::cout << std::endl;
-			std::cout << std::endl;*/
-		}
-	}
-
-	std::set<Client> getClients()
+	std::set<Client> stripClients()
 	{
 		std::lock_guard<std::mutex> lock(clientMutex);
 		return std::move(clients);
