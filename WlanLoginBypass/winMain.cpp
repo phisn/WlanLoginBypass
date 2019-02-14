@@ -1,24 +1,11 @@
-#include <ClientFinder.h> // must be before adapter
-#include <ClientTester.h>
+#include <Application.h>
 #include <Adapter.h>
 
-#define INIT_SOCKET_FAILED 1
-#define INCORRECT_ADAPTER_SELECTION 2
-#define PCAP_ADAPTER_NOT_FOUND 3
-
-bool initSocket()
-{
-	WSADATA wsaData;
-
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR)
-	{
-		std::cout << "Failed to initialize socket libary (" << WSAGetLastError() << ")" << std::endl;
-
-		return false;
-	}
-
-	return true;
-}
+#define INIT_WSA_FAILED				0x0000'0001
+#define INIT_COM_FAILED				0x0000'0002
+#define INCORRECT_ADAPTER_SELECTION 0x0000'0003
+#define PCAP_ADAPTER_NOT_FOUND		0x0000'0004
+#define INIT_APP_FAILED				0x0000'0005
 
 bool selectAdapter(Adapter* const adapter)
 {
@@ -72,7 +59,7 @@ bool selectAdapter(Adapter* const adapter)
 		std::cout << std::left << adapters[i].getAdapterInfo()->Description << " : ";
 
 		// print adapter type
-		switch (adapter->getAdapterInfo()->Type)
+		switch (adapters[i].getAdapterInfo()->Type)
 		{
 		case 1:
 			std::cout << "Unkown type";
@@ -102,6 +89,8 @@ bool selectAdapter(Adapter* const adapter)
 			std::cout << "IEEE 802.11 wireless network interface";
 
 			break;
+		default:
+			std::cout << "???";
 		}
 
 		std::cout << std::endl;
@@ -132,10 +121,21 @@ bool selectAdapter(Adapter* const adapter)
 
 int main()
 {
-	std::cout << "Initializing components..." << std::endl;
-	if (!initSocket())
+	std::cout << "Initializing components ..." << std::endl;
+
+	static WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR)
 	{
-		return INIT_SOCKET_FAILED;
+		std::cout << "Failed to initialize WSA (" << WSAGetLastError() << ")" << std::endl;
+
+		return INIT_WSA_FAILED;
+	}
+
+	if (HRESULT result = CoInitialize(NULL); result != S_OK)
+	{
+		std::cout << "Failed to initialize COM (" << result << ")" << std::endl;
+
+		return INIT_COM_FAILED;
 	}
 
 	Adapter adapter;
@@ -144,25 +144,12 @@ int main()
 		return INCORRECT_ADAPTER_SELECTION;
 	}
 
-	return 0;
-	
-	adapter.resetMacAddress();
-	std::pair<std::string, bool> result;
 
-	if (!result.second)
+	Application application(&adapter);
+	if (!application.initialize())
 	{
-		return PCAP_ADAPTER_NOT_FOUND;
+		return INIT_APP_FAILED;
 	}
 
-	ClientFinder clientFinder(result.first);
-	std::thread clientFinderThread(
-		std::ref(clientFinder)
-	);
-
-	std::cout << "Starting initialize sleep (30 sec)" << std::endl;
-	std::this_thread::sleep_for(
-		std::chrono::seconds(30)
-	);
-
-
+	return application.run();
 }

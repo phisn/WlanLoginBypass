@@ -21,6 +21,9 @@
     <ClCompile Include="source\ClientTester.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="source\Application.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Adapter.h">
@@ -39,6 +42,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="source\ClientTester.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Application.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

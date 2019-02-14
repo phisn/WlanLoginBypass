@@ -37,61 +37,85 @@
 
 class ClientFinder
 {
-	const std::string networkDevice;
-public:
-
-	ClientFinder(
-		const std::string networkDevice)
-		:
-		networkDevice(networkDevice)
+	static void __cdecl static_runner(
+		u_char* const clientFinder,
+		const pcap_pkthdr* const packetHeader,
+		const u_char* const packetData)
 	{
-		current = this;
+		((ClientFinder*) clientFinder)->packetHandler(packetHeader, packetData);
 	}
 
-	void operator()()
+public:
+	~ClientFinder()
 	{
-		std::cout << networkDevice << std::endl;
-
-		captureHandle = pcap_open_live(
-			networkDevice.c_str(),
-			66536, 
-			0,
-			1000,
-			errorBuffer);
-		
-		if (errorBuffer[0])
+		if (captureHandle)
 		{
-			std::cout << errorBuffer << std::endl;
+			stop();
+		}
+	}
 
-			if (captureHandle == NULL)
+	bool initialize(const std::string networkDevice)
+	{
+		{	char errorBuffer[PCAP_ERRBUF_SIZE] = "";
+			captureHandle = pcap_open_live(
+				networkDevice.c_str(),
+				66536,
+				0,
+				1000,
+				errorBuffer);
+
+			if (errorBuffer[0])
 			{
-				return;
+				if (captureHandle == NULL)
+				{
+					std::cout << "Failed to call pcap_open_live (" << errorBuffer << ")" << std::endl;
+
+					return false;
+				}
+				else
+				{
+					std::cout << "Warning: " << errorBuffer << std::endl;
+				}
 			}
+		} // deallocate errorBuffer
+
+		bpf_program compiledFilter;
+		if (pcap_compile(
+				captureHandle, 
+				&compiledFilter, 
+				"arp or rarp or ip or vlan", 
+				FALSE, 0) 
+			== PCAP_ERROR)
+		{
+			std::cout << "Failed to call pcap_compile (" << pcap_geterr(captureHandle) << ")" << std::endl;
+
+			return false;
 		}
 
-		bpf_program compiledFilter; //  or rarp or ip or vlan"
-		if (pcap_compile(captureHandle, &compiledFilter, "arp or rarp or ip or vlan", FALSE, 0) == -1)
+		if (pcap_setfilter(
+				captureHandle, 
+				&compiledFilter) 
+			== PCAP_ERROR)
 		{
-			std::cout << pcap_geterr(captureHandle) << std::endl;
-			return;
-		}
+			std::cout << "Failed to call pcap_setfilter (" << pcap_geterr(captureHandle) << ")" << std::endl;
 
-		if (pcap_setfilter(captureHandle, &compiledFilter) == -1)
-		{
-			std::cout << pcap_geterr(captureHandle) << std::endl;
-			return;
+			return false;
 		}
+		
+		return true;
+	}
 
-		if (int result = pcap_loop(captureHandle, -1, packetHandler, NULL); result < 0)
-		{
-			std::cout << result << " : " << pcap_geterr(captureHandle) << std::endl;
-			return;
-		}
+	void run()
+	{
+		pcap_loop(captureHandle, -1, static_runner, (u_char*) this);
 	}
 
 	void stop()
 	{
 		pcap_breakloop(captureHandle);
+		pcap_close(captureHandle);
+
+		clients.clear();
 	}
 	
 	std::set<Client> stripClients()
@@ -101,18 +125,18 @@ public:
 	}
 
 private:
-	static ClientFinder* current;
-	static void packetHandler(
-		u_char* user,
-		const pcap_pkthdr* packetHeader,
-		const u_char* packetData)
+	void packetHandler(
+		const pcap_pkthdr* const packetHeader,
+		const u_char* const packetData)
 	{
-		std::pair<decltype(current->clients)::iterator, bool> result = { };
+		std::lock_guard<std::mutex> lock(clientMutex);
+		// std::pair<decltype(clients)::iterator, bool> result = { };
 
 		switch (REVERSE_TO_16_PTR(packetData + DEF_PROTO_OFFSET))
 		{
 		case PROTO_TYPE_IP:
-			result = current->clients.emplace(
+			// result = 
+			clients.emplace(
 				IpAddress(CONVERT_TO_PTR(
 					IPAddr,
 					packetData + IP_IPSOURCE_OFFSET)),
@@ -124,7 +148,8 @@ private:
 		case PROTO_TYPE_ARP:
 			if (REVERSE_TO_16_PTR(packetData + ARP_PROTO_OFFSET) == PROTO_TYPE_IP)
 			{
-				result = current->clients.emplace(
+				// result = 
+				clients.emplace(
 					IpAddress(CONVERT_TO_PTR(
 						IPAddr,
 						packetData + ARP_IPSOURCE_OFFSET)),
@@ -134,7 +159,8 @@ private:
 			}
 			else
 			{
-				result = current->clients.emplace(
+				// result = 
+				clients.emplace(
 					IpAddress(),
 					MacAddress(packetData + DEF_MACSOURCE_OFFSET)
 				);
@@ -142,19 +168,18 @@ private:
 
 			break;
 		default:
-			std::cout << "Invalid protocol" << std::endl;
+			std::cout << "Invalid protocol (" << REVERSE_TO_16_PTR(packetData + DEF_PROTO_OFFSET) << ")" << std::endl;
 
 			return;
 		}
 
-		if (result.second)
+		/*if (result.second)
 		{
 			std::cout << "Found => IP: " << result.first->getIpAddress().toString() << "  MAC: " << result.first->getMacAddress().toString() << ";" << std::endl;
-		}
+		}*/
 	}
 
-	pcap_t* captureHandle;
-	char errorBuffer[PCAP_ERRBUF_SIZE] = "";
+	pcap_t* captureHandle = NULL;
 
 	std::mutex clientMutex;
 	std::set<Client> clients;
