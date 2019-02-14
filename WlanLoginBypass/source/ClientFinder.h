@@ -130,12 +130,12 @@ private:
 		const u_char* const packetData)
 	{
 		std::lock_guard<std::mutex> lock(clientMutex);
-		// std::pair<decltype(clients)::iterator, bool> result = { };
+		std::pair<decltype(clients)::iterator, bool> result = { };
 
 		switch (REVERSE_TO_16_PTR(packetData + DEF_PROTO_OFFSET))
 		{
 		case PROTO_TYPE_IP:
-			// result = 
+			result = 
 			clients.emplace(
 				IpAddress(CONVERT_TO_PTR(
 					IPAddr,
@@ -148,7 +148,7 @@ private:
 		case PROTO_TYPE_ARP:
 			if (REVERSE_TO_16_PTR(packetData + ARP_PROTO_OFFSET) == PROTO_TYPE_IP)
 			{
-				// result = 
+				result = 
 				clients.emplace(
 					IpAddress(CONVERT_TO_PTR(
 						IPAddr,
@@ -159,7 +159,7 @@ private:
 			}
 			else
 			{
-				// result = 
+				result = 
 				clients.emplace(
 					IpAddress(),
 					MacAddress(packetData + DEF_MACSOURCE_OFFSET)
@@ -173,10 +173,10 @@ private:
 			return;
 		}
 
-		/*if (result.second)
+		if (result.second)
 		{
 			std::cout << "Found => IP: " << result.first->getIpAddress().toString() << "  MAC: " << result.first->getMacAddress().toString() << ";" << std::endl;
-		}*/
+		}
 	}
 
 	pcap_t* captureHandle = NULL;
